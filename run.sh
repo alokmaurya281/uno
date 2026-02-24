@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # ============================================
-#  UNO Multiplayer Arena — Run Script
-#  For Render: starts backend (serves frontend
-#  dist as static). Use as Start Command.
+#  UNO Multiplayer Arena — Start Script
+#  Starts the backend server from project root.
+#  Render Start Command: bash run.sh
 # ============================================
 
 set -e
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
 
-cd "$ROOT/backend"
 echo "🎮 Starting UNO server..."
-node server.js
+node backend/server.js

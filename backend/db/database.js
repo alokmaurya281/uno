@@ -1,7 +1,10 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'uno.db');
+const ROOT = path.resolve(__dirname, '..', '..');
+const dbPath = process.env.DB_PATH
+  ? path.resolve(ROOT, process.env.DB_PATH)
+  : path.join(__dirname, 'uno.db');
 const db = new Database(dbPath);
 
 // Enable WAL mode for better concurrent access

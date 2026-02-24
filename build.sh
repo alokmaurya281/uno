@@ -16,10 +16,14 @@ npm install
 echo "✓ Backend ready"
 
 echo ""
-echo "▶ Creating .env if missing..."
+echo "▶ Checking .env..."
 if [ ! -f "$ROOT/.env" ]; then
-    cp "$ROOT/.env.example" "$ROOT/.env"
-    echo "✓ Created .env from .env.example"
+    if [ -z "$NODE_ENV" ]; then
+        cp "$ROOT/.env.example" "$ROOT/.env"
+        echo "✓ Created .env from .env.example (local dev)"
+    else
+        echo "✓ Env vars provided by platform — skipping .env"
+    fi
 else
     echo "✓ .env already exists"
 fi
