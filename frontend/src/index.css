@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ===== DESIGN TOKENS ===== */
+:root {
+  --neon-red: #ff3b5c;
+  --neon-blue: #00d4ff;
+  --neon-green: #00ff88;
+  --neon-yellow: #ffe14d;
+  --neon-purple: #b44dff;
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: #1a1f2e;
+  --bg-glass: rgba(17, 24, 39, 0.7);
+  --text-primary: #f0f4ff;
+  --text-secondary: #8b95a8;
+  --border-glow: rgba(0, 212, 255, 0.3);
+  --shadow-neon: 0 0 20px rgba(0, 212, 255, 0.15);
+  --card-width: 80px;
+  --card-height: 120px;
+}
+
+/* ===== GLOBAL RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neon-blue);
+  border-radius: 3px;
+}
+
+/* ===== GLASSMORPHISM ===== */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-strong {
+  background: rgba(17, 24, 39, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ===== NEON GLOW ===== */
+.neon-text {
+  text-shadow: 0 0 10px var(--neon-blue), 0 0 30px rgba(0, 212, 255, 0.25);
+}
+
+.neon-border {
+  border: 1px solid var(--border-glow);
+  box-shadow: var(--shadow-neon);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px rgba(255, 59, 92, 0.4);
+}
+
+.glow-blue {
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.glow-yellow {
+  box-shadow: 0 0 15px rgba(255, 225, 77, 0.4);
+}
+
+/* ===== ANIMATED BG ===== */
+.bg-gradient-animated {
+  background: linear-gradient(135deg, #0a0e17 0%, #111827 50%, #0a1628 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ===== CARD COLORS ===== */
+.card-red {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.card-blue {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.card-green {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+}
+
+.card-yellow {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+}
+
+.card-wild {
+  background: conic-gradient(from 45deg, #ef4444 0deg 90deg, #3b82f6 90deg 180deg, #22c55e 180deg 270deg, #eab308 270deg 360deg);
+}
+
+/* ===== BUTTONS ===== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.25);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 212, 255, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--neon-red), #b91c1c);
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* ===== INPUTS ===== */
+.input-neon {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 16px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  outline: none;
+  width: 100%;
+}
+
+.input-neon:focus {
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.input-neon::placeholder {
+  color: var(--text-secondary);
+}
+
+/* ===== TOGGLE SWITCH ===== */
+.toggle-track {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.toggle-track.active {
+  background: var(--neon-green);
+}
+
+.toggle-track.inactive {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 3px;
+  transition: left 0.3s;
+}
+
+.toggle-thumb.on {
+  left: 25px;
+}
+
+.toggle-thumb.off {
+  left: 3px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes turn-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.7), 0 0 50px rgba(0, 255, 136, 0.3);
+  }
+}
+
+.active-turn {
+  animation: turn-glow 1.5s ease-in-out infinite;
+  border-color: var(--neon-green) !important;
+}
+
+/* ===== RESPONSIVE CARD SIZES ===== */
+@media (min-width: 1024px) {
+  :root {
+    --card-width: 85px;
+    --card-height: 127px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --card-width: 55px;
+    --card-height: 82px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --card-width: 42px;
+    --card-height: 63px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    padding: 7px 12px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .input-neon {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== SAFE AREAS (notch phones) ===== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
