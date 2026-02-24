@@ -1,7 +1,9 @@
 import { io } from 'socket.io-client';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+// In production the frontend is served from the same server, so connect to same origin.
+// In dev, Vite proxies /socket.io so we also connect to same origin (window.location).
+const SOCKET_URL = import.meta.env.VITE_API_URL || undefined; // undefined = same origin
 
 let socket = null;
 
