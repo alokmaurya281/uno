@@ -2,54 +2,45 @@ import { motion } from 'framer-motion';
 import Card from './Card';
 
 export default function PlayerHand({ cards, onCardClick, isMyTurn, currentColor, topCard, drawStack }) {
-    const canPlay = (card) => {
+    const canPlay = (c) => {
         if (!isMyTurn) return false;
         if (drawStack > 0) {
-            if (topCard?.value === 'draw2') return card.value === 'draw2';
-            if (topCard?.value === 'wild_draw4') return card.value === 'wild_draw4';
+            if (topCard?.value === 'draw2') return c.value === 'draw2';
+            if (topCard?.value === 'wild_draw4') return c.value === 'wild_draw4';
             return false;
         }
-        if (card.type === 'wild') return true;
-        if (card.color === currentColor) return true;
-        if (card.value === topCard?.value) return true;
+        if (c.type === 'wild') return true;
+        if (c.color === currentColor) return true;
+        if (c.value === topCard?.value) return true;
         return false;
     };
 
-    // Responsive overlap: tighter on mobile, more cards visible
-    const getOverlap = () => {
-        if (typeof window === 'undefined') return -15;
-        const isMobile = window.innerWidth < 640;
-        const baseOverlap = isMobile ? -22 : -18;
-        const perCard = isMobile ? 1.5 : 2;
-        return Math.max(baseOverlap, -40 + cards.length * perCard);
-    };
+    // Overlap gets tighter as hand grows: -16 base, shrinks to -24 max
+    const overlap = Math.max(-24, -16 + (cards.length > 7 ? -(cards.length - 7) * 1.5 : 0));
 
     return (
-        <div className="flex items-end justify-center px-1 sm:px-4 pb-2 sm:pb-4 pt-1 overflow-x-auto overflow-y-visible safe-bottom"
-            style={{ minHeight: 'calc(var(--card-height) + 30px)' }}>
-            <div className="flex items-end" style={{ gap: `${getOverlap()}px` }}>
+        <div
+            className="flex items-end justify-center px-2 sm:px-4 pb-3 sm:pb-4 pt-1 overflow-x-auto safe-bottom"
+            style={{ minHeight: 'calc(var(--card-h) + 24px)' }}
+        >
+            <div className="flex items-end" style={{ gap: `${overlap}px` }}>
                 {cards.map((card, i) => {
                     const mid = (cards.length - 1) / 2;
-                    const offset = i - mid;
-                    const yOffset = Math.abs(offset) * 1.5;
+                    const yOff = Math.abs(i - mid) * 1.5;
                     const playable = canPlay(card);
 
                     return (
                         <motion.div
                             key={card.id}
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{
-                                opacity: 1,
-                                y: -yOffset,
-                                transition: { delay: i * 0.02 },
-                            }}
+                            initial={{ opacity: 0, y: 36 }}
+                            animate={{ opacity: 1, y: -yOff, transition: { delay: i * 0.02 } }}
                             style={{ zIndex: i }}
                         >
                             <Card
                                 card={card}
                                 onClick={() => onCardClick(card)}
                                 disabled={!playable}
-                                className={playable ? 'ring-1 sm:ring-2 ring-[var(--neon-green)]/40' : ''}
+                                className={playable ? 'ring-1 ring-[var(--neon-green)]/40' : ''}
                             />
                         </motion.div>
                     );

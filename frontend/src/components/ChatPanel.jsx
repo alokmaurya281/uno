@@ -5,14 +5,14 @@ const EMOJIS = ['😂', '😡', '😭', '🔥', '👏', '💀', '🎉', '😈'];
 
 export default function ChatPanel({ messages, onSendMessage, onSendEmoji, username }) {
     const [input, setInput] = useState('');
-    const [isOpen, setIsOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const scrollRef = useRef(null);
 
     useEffect(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }, [messages]);
 
-    const handleSend = (e) => {
+    const send = (e) => {
         e.preventDefault();
         if (!input.trim()) return;
         onSendMessage(input.trim());
@@ -21,35 +21,29 @@ export default function ChatPanel({ messages, onSendMessage, onSendEmoji, userna
 
     return (
         <>
-            {/* Toggle button */}
+            {/* Toggle (mobile) */}
             <button
-                className="fixed bottom-16 right-3 sm:bottom-4 sm:right-4 md:hidden z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full btn-primary flex items-center justify-center text-lg shadow-lg"
-                onClick={() => setIsOpen(!isOpen)}
+                className="fixed bottom-14 right-3 md:hidden z-40 w-10 h-10 rounded-full btn-primary shadow-lg flex items-center justify-center text-lg"
+                onClick={() => setOpen(!open)}
             >
                 💬
             </button>
 
-            {/* Backdrop on mobile */}
-            {isOpen && (
-                <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setIsOpen(false)} />
-            )}
+            {/* Backdrop (mobile) */}
+            {open && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setOpen(false)} />}
 
-            {/* Chat panel */}
+            {/* Panel */}
             <div
-                className={`fixed z-40 flex flex-col
-          /* Mobile: bottom sheet */
-          bottom-0 left-0 right-0 h-[55vh] rounded-t-2xl
-          /* Desktop: side panel */
-          md:top-0 md:right-0 md:left-auto md:bottom-0 md:h-full md:w-72 lg:w-80 md:rounded-none
-          glass-strong
-          transition-transform duration-300 ease-out
-          ${isOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0 md:translate-x-0'}
-        `}
+                className={`fixed z-40 flex flex-col glass-strong
+          bottom-0 left-0 right-0 h-[50vh] rounded-t-2xl
+          md:top-0 md:right-0 md:left-auto md:bottom-0 md:h-full md:w-72 md:rounded-none
+          transition-transform duration-300
+          ${open ? 'translate-y-0' : 'translate-y-full md:translate-y-0'}`}
             >
                 {/* Header */}
-                <div className="px-3 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-                    <h3 className="font-semibold text-sm">Chat</h3>
-                    <button className="md:hidden text-base p-1" onClick={() => setIsOpen(false)}>✕</button>
+                <div className="px-4 py-2.5 border-b border-white/8 flex items-center justify-between flex-shrink-0">
+                    <h3 className="text-sm font-semibold">Chat</h3>
+                    <button className="md:hidden text-base" onClick={() => setOpen(false)}>✕</button>
                 </div>
 
                 {/* Messages */}
@@ -58,35 +52,33 @@ export default function ChatPanel({ messages, onSendMessage, onSendEmoji, userna
                         {messages.map((msg) => (
                             <motion.div key={msg.id}
                                 className={msg.username === username ? 'text-right' : ''}
-                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                                <span className="text-[10px] text-[var(--text-secondary)]">{msg.username}</span>
-                                <div className={`inline-block rounded-lg px-2.5 py-1.5 text-xs sm:text-sm max-w-[200px] break-words
-                  ${msg.username === username ? 'bg-[var(--neon-blue)]/20 ml-auto' : 'bg-[var(--bg-card)]'}`}>
+                                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+                                <p className="text-[10px] text-[var(--text-secondary)] mb-0.5">{msg.username}</p>
+                                <div className={`inline-block rounded-lg px-2.5 py-1.5 text-xs max-w-[180px] break-words
+                  ${msg.username === username ? 'bg-[var(--neon-blue)]/15' : 'bg-[var(--bg-card)]'}`}>
                                     {msg.message}
                                 </div>
                             </motion.div>
                         ))}
                     </AnimatePresence>
                     {messages.length === 0 && (
-                        <div className="text-center text-[var(--text-secondary)] text-xs py-6">No messages yet</div>
+                        <p className="text-center text-[var(--text-secondary)] text-xs py-8">No messages yet</p>
                     )}
                 </div>
 
-                {/* Emoji bar */}
-                <div className="px-2 py-1.5 border-t border-white/10 flex gap-0.5 justify-center flex-shrink-0">
-                    {EMOJIS.map(emoji => (
-                        <button key={emoji} className="text-base sm:text-lg hover:scale-125 transition-transform p-0.5"
-                            onClick={() => onSendEmoji(emoji)}>
-                            {emoji}
-                        </button>
+                {/* Emojis */}
+                <div className="px-3 py-1.5 border-t border-white/8 flex justify-center gap-1 flex-shrink-0">
+                    {EMOJIS.map((e) => (
+                        <button key={e} className="text-base hover:scale-125 transition-transform p-0.5"
+                            onClick={() => onSendEmoji(e)}>{e}</button>
                     ))}
                 </div>
 
                 {/* Input */}
-                <form onSubmit={handleSend} className="p-2 border-t border-white/10 flex gap-2 flex-shrink-0 safe-bottom">
-                    <input className="input-neon flex-1 py-1.5 text-xs sm:text-sm" placeholder="Type..."
-                        value={input} onChange={e => setInput(e.target.value)} maxLength={200} />
-                    <button type="submit" className="btn-primary px-3 py-1.5 rounded-lg text-xs sm:text-sm">Send</button>
+                <form onSubmit={send} className="p-2.5 border-t border-white/8 flex gap-2 flex-shrink-0 safe-bottom">
+                    <input className="input-neon flex-1 py-1.5 text-xs" placeholder="Type..."
+                        value={input} onChange={(e) => setInput(e.target.value)} maxLength={200} />
+                    <button type="submit" className="btn-primary px-3 py-1.5 text-xs">Send</button>
                 </form>
             </div>
         </>

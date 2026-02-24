@@ -16,8 +16,8 @@ export default function GamePage() {
     const { roomId } = useParams();
     const navigate = useNavigate();
     const { emit, on, connected } = useSocket();
-    const username = useUserStore(s => s.username);
-    const setCurrentRoom = useLobbyStore(s => s.setCurrentRoom);
+    const username = useUserStore((s) => s.username);
+    const setCurrentRoom = useLobbyStore((s) => s.setCurrentRoom);
     const {
         myHand, topCard, currentColor, currentPlayerId, players,
         drawPileCount, direction, drawStack, chatMessages,
@@ -26,31 +26,31 @@ export default function GamePage() {
         setGameOverData, clearGame,
     } = useGameStore();
 
-    const [emojiReactions, setEmojiReactions] = useState([]);
-    const [turnTimeLeft, setTurnTimeLeft] = useState(30);
+    const [emojis, setEmojis] = useState([]);
+    const [timeLeft, setTimeLeft] = useState(30);
     const socketId = getSocket().id;
     const isMyTurn = currentPlayerId === socketId;
+    const opponents = players.filter((p) => p.id !== socketId);
 
-    // Socket events
+    /* ---- Socket events ---- */
     useEffect(() => {
         if (!connected) return;
-        const unsub1 = on('gameStateUpdate', (gs) => setGameState(gs));
-        const unsub2 = on('gameOver', (data) => setGameOverData(data));
-        const unsub3 = on('chatMessage', (msg) => addChatMessage(msg));
-        const unsub4 = on('emojiReaction', (data) => {
+        const u1 = on('gameStateUpdate', (gs) => setGameState(gs));
+        const u2 = on('gameOver', (d) => setGameOverData(d));
+        const u3 = on('chatMessage', (m) => addChatMessage(m));
+        const u4 = on('emojiReaction', (d) => {
             const id = Date.now() + Math.random();
-            setEmojiReactions(prev => [...prev, { ...data, id }]);
-            setTimeout(() => setEmojiReactions(prev => prev.filter(e => e.id !== id)), 2000);
+            setEmojis((p) => [...p, { ...d, id }]);
+            setTimeout(() => setEmojis((p) => p.filter((e) => e.id !== id)), 2000);
         });
-        const unsub5 = on('unoCall', (data) => {
-            addChatMessage({ id: Date.now(), username: 'System', message: `${data.username} called UNO!`, timestamp: Date.now() });
+        const u5 = on('unoCall', (d) =>
+            addChatMessage({ id: Date.now(), username: 'System', message: `${d.username} called UNO!`, timestamp: Date.now() }));
+        const u6 = on('unoCaught', (d) => {
+            const c = players.find((p) => p.id === d.catcherId)?.username || 'Someone';
+            const t = players.find((p) => p.id === d.targetId)?.username || 'Someone';
+            addChatMessage({ id: Date.now(), username: 'System', message: `${c} caught ${t}! +${d.penaltyCards} cards`, timestamp: Date.now() });
         });
-        const unsub6 = on('unoCaught', (data) => {
-            const catcher = players.find(p => p.id === data.catcherId)?.username || 'Someone';
-            const target = players.find(p => p.id === data.targetId)?.username || 'Someone';
-            addChatMessage({ id: Date.now(), username: 'System', message: `${catcher} caught ${target}! +${data.penaltyCards} penalty cards`, timestamp: Date.now() });
-        });
-        const unsub7 = on('roomUpdated', (room) => {
+        const u7 = on('roomUpdated', (room) => {
             setCurrentRoom(room);
             if (room.status === 'waiting') { clearGame(); navigate(`/room/${roomId}`); }
         });
@@ -60,69 +60,59 @@ export default function GamePage() {
                 else navigate('/lobby');
             });
         }
-        return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7(); };
+        return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
     }, [connected]);
 
-    // Turn timer
+    /* ---- Turn timer ---- */
     useEffect(() => {
         const gs = useGameStore.getState();
         if (!gs.turnStartTime) return;
-        const interval = setInterval(() => {
-            const elapsed = (Date.now() - gs.turnStartTime) / 1000;
-            setTurnTimeLeft(Math.max(0, Math.ceil((gs.turnTimer || 30) - elapsed)));
+        const iv = setInterval(() => {
+            const remaining = Math.max(0, (gs.turnTimer || 30) - (Date.now() - gs.turnStartTime) / 1000);
+            setTimeLeft(Math.ceil(remaining));
         }, 500);
-        return () => clearInterval(interval);
+        return () => clearInterval(iv);
     }, [currentPlayerId]);
 
-    const handleCardClick = useCallback((card) => {
+    /* ---- Handlers ---- */
+    const playCard = useCallback((card) => {
         if (!isMyTurn) return;
         if (card.type === 'wild') { setPendingCard(card); setShowColorPicker(true); return; }
-        emit('playCard', { roomId, cardId: card.id }, (res) => { if (!res.success) console.warn(res.error); });
-    }, [isMyTurn, emit, roomId, setPendingCard, setShowColorPicker]);
-
-    const handleColorSelect = useCallback((color) => {
-        setShowColorPicker(false);
-        if (!pendingCard) return;
-        emit('playCard', { roomId, cardId: pendingCard.id, chosenColor: color }, () => { });
-        setPendingCard(null);
-    }, [pendingCard, emit, roomId, setPendingCard, setShowColorPicker]);
-
-    const handleDraw = useCallback(() => {
-        if (!isMyTurn) return;
-        emit('drawCard', { roomId }, () => { });
+        emit('playCard', { roomId, cardId: card.id });
     }, [isMyTurn, emit, roomId]);
 
-    const handleCallUno = useCallback(() => {
-        emit('callUNO', { roomId }, () => { });
-    }, [emit, roomId]);
+    const pickColor = useCallback((color) => {
+        setShowColorPicker(false);
+        if (pendingCard) emit('playCard', { roomId, cardId: pendingCard.id, chosenColor: color });
+        setPendingCard(null);
+    }, [pendingCard, emit, roomId]);
 
-    const handleCatchUno = useCallback((targetId) => {
-        emit('catchUNO', { roomId, targetId }, () => { });
-    }, [emit, roomId]);
-
-    const opponents = players.filter(p => p.id !== socketId);
+    const draw = useCallback(() => { if (isMyTurn) emit('drawCard', { roomId }); }, [isMyTurn, emit, roomId]);
+    const callUno = useCallback(() => emit('callUNO', { roomId }), [emit, roomId]);
+    const catchUno = useCallback((id) => emit('catchUNO', { roomId, targetId: id }), [emit, roomId]);
 
     return (
-        <div className="h-screen h-[100dvh] bg-gradient-animated flex flex-col overflow-hidden md:pr-72 lg:pr-80">
-            {/* Top bar */}
-            <div className="glass px-2 sm:px-3 py-2 flex items-center justify-between shrink-0 z-20 gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                    <button className="btn-secondary px-2 py-1 rounded-lg text-[10px] sm:text-xs flex-shrink-0"
+        <div className="h-[100dvh] bg-gradient-animated flex flex-col overflow-hidden md:pr-72">
+
+            {/* ---- Top bar ---- */}
+            <div className="glass !rounded-none px-3 py-2 flex items-center justify-between shrink-0 z-20 gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <button className="btn-secondary px-2.5 py-1 text-[11px]"
                         onClick={() => { emit('leaveRoom', { roomId }); navigate('/lobby'); }}>
                         ← Exit
                     </button>
-                    <span className="text-[10px] sm:text-xs text-[var(--text-secondary)] hidden sm:inline truncate">
-                        Room: <span className="font-mono text-[var(--neon-blue)]">{roomId}</span>
+                    <span className="text-[11px] text-[var(--text-secondary)] hidden sm:inline truncate">
+                        Room <span className="font-mono text-[var(--neon-blue)]">{roomId}</span>
                     </span>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    <div className={`font-mono text-sm sm:text-base font-bold ${turnTimeLeft <= 5 ? 'text-[var(--neon-red)]' : 'text-[var(--neon-green)]'}`}>
-                        ⏱{turnTimeLeft}s
-                    </div>
+
+                <div className="flex items-center gap-2.5 flex-shrink-0">
+                    <span className={`font-mono text-sm font-bold ${timeLeft <= 5 ? 'text-[var(--neon-red)]' : 'text-[var(--neon-green)]'}`}>
+                        ⏱ {timeLeft}s
+                    </span>
                     {myHand.length <= 2 && (
-                        <motion.button className="btn-danger px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-bold"
-                            onClick={handleCallUno}
-                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                        <motion.button className="btn-danger px-3 py-1 text-xs font-bold"
+                            onClick={callUno}
                             animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
                             UNO!
                         </motion.button>
@@ -130,17 +120,16 @@ export default function GamePage() {
                 </div>
             </div>
 
-            {/* Opponents - scrollable row */}
-            <div className="flex items-start justify-center gap-2 sm:gap-3 md:gap-5 px-2 sm:px-4 py-2 sm:py-3 shrink-0 flex-wrap z-10 overflow-x-auto">
-                {opponents.map(player => (
-                    <div key={player.id} className="relative flex-shrink-0">
-                        <PlayerAvatar player={player} isCurrentTurn={player.id === currentPlayerId} isMe={false} />
-                        {player.cardCount === 1 && (
+            {/* ---- Opponents ---- */}
+            <div className="flex items-start justify-center gap-3 sm:gap-4 px-3 py-2.5 shrink-0 flex-wrap z-10 overflow-x-auto">
+                {opponents.map((p) => (
+                    <div key={p.id} className="relative flex-shrink-0">
+                        <PlayerAvatar player={p} isCurrentTurn={p.id === currentPlayerId} isMe={false} />
+                        {p.cardCount === 1 && (
                             <motion.button
-                                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 bg-[var(--neon-red)] text-white text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                                onClick={() => handleCatchUno(player.id)}
-                                initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                whileHover={{ scale: 1.2 }}>
+                                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 bg-[var(--neon-red)] text-white text-[8px] px-1.5 py-0.5 rounded-full"
+                                onClick={() => catchUno(p.id)}
+                                initial={{ scale: 0 }} animate={{ scale: 1 }} whileHover={{ scale: 1.2 }}>
                                 Catch!
                             </motion.button>
                         )}
@@ -148,53 +137,48 @@ export default function GamePage() {
                 ))}
             </div>
 
-            {/* Emoji reactions */}
+            {/* ---- Emoji overlay ---- */}
             <AnimatePresence>
-                {emojiReactions.map(r => (
-                    <motion.div key={r.id} className="absolute text-3xl sm:text-5xl pointer-events-none z-50"
-                        style={{ left: '50%', top: '40%' }}
-                        initial={{ scale: 0, opacity: 1 }}
-                        animate={{ scale: 2, opacity: 0, y: -100 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5 }}>
+                {emojis.map((r) => (
+                    <motion.div key={r.id} className="absolute text-4xl pointer-events-none z-50"
+                        style={{ left: '50%', top: '35%' }}
+                        initial={{ scale: 0, opacity: 1 }} animate={{ scale: 2, opacity: 0, y: -80 }}
+                        exit={{ opacity: 0 }} transition={{ duration: 1.5 }}>
                         {r.emoji}
                     </motion.div>
                 ))}
             </AnimatePresence>
 
-            {/* Game board center */}
+            {/* ---- Board ---- */}
             <div className="flex-1 flex items-center justify-center z-10 min-h-0">
-                <GameBoard
-                    topCard={topCard} currentColor={currentColor} direction={direction}
-                    drawPileCount={drawPileCount} drawStack={drawStack}
-                    onDraw={handleDraw} isMyTurn={isMyTurn}
-                />
+                <GameBoard topCard={topCard} currentColor={currentColor} direction={direction}
+                    drawPileCount={drawPileCount} drawStack={drawStack} onDraw={draw} isMyTurn={isMyTurn} />
             </div>
 
-            {/* Turn indicator */}
+            {/* ---- Turn indicator ---- */}
             <AnimatePresence>
                 {isMyTurn && (
-                    <motion.div className="text-center text-[var(--neon-green)] font-bold text-xs sm:text-sm shrink-0 pb-1"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0.5, 1, 0.5] }}
+                    <motion.p className="text-center text-[var(--neon-green)] font-bold text-xs shrink-0 pb-1"
+                        initial={{ opacity: 0 }} animate={{ opacity: [0.5, 1, 0.5] }}
                         transition={{ repeat: Infinity, duration: 1.5 }}>
                         Your Turn!
-                    </motion.div>
+                    </motion.p>
                 )}
             </AnimatePresence>
 
-            {/* My hand */}
+            {/* ---- Hand ---- */}
             <div className="shrink-0 z-20">
-                <PlayerHand
-                    cards={myHand} onCardClick={handleCardClick} isMyTurn={isMyTurn}
-                    currentColor={currentColor} topCard={topCard} drawStack={drawStack}
-                />
+                <PlayerHand cards={myHand} onCardClick={playCard} isMyTurn={isMyTurn}
+                    currentColor={currentColor} topCard={topCard} drawStack={drawStack} />
             </div>
 
-            <ColorPicker show={showColorPicker} onSelect={handleColorSelect} />
+            {/* Overlays */}
+            <ColorPicker show={showColorPicker} onSelect={pickColor} />
             <GameOverModal data={gameOverData} roomId={roomId} />
-            <ChatPanel messages={chatMessages} onSendMessage={msg => emit('chatMessage', { roomId, message: msg })}
-                onSendEmoji={emoji => emit('emojiReaction', { roomId, emoji })} username={username} />
+            <ChatPanel messages={chatMessages}
+                onSendMessage={(m) => emit('chatMessage', { roomId, message: m })}
+                onSendEmoji={(e) => emit('emojiReaction', { roomId, emoji: e })}
+                username={username} />
         </div>
     );
 }
