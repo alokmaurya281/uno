@@ -40,7 +40,7 @@ fi
 echo ""
 echo "▶ Installing frontend dependencies..."
 cd "$ROOT/frontend"
-npm install
+npm install --include=dev
 echo "✓ Frontend deps ready"
 
 echo ""
