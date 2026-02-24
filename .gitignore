@@ -3,6 +3,7 @@ node_modules/
 
 # Environment
 .env
+backend/.env
 
 # Build outputs
 dist/
@@ -22,6 +23,8 @@ Thumbs.db
 # Logs and databases
 *.log
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 
 # Python
